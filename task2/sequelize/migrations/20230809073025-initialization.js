@@ -112,7 +112,6 @@ module.exports = {
         return (q += `('${data.name}', '${data.cron}')`);
       }, 'insert into "Jobs" ("name", "cron") values ');
 
-      console.log(query);
       await queryInterface.sequelize.query(query, { transaction });
 
       await transaction.commit();
@@ -125,7 +124,8 @@ module.exports = {
   async down(queryInterface) {
     const transaction = await queryInterface.sequelize.transaction();
     try {
-      await queryInterface.dropTable("Users", { transaction });
+      await queryInterface.dropTable("JobLogs", { transaction });
+      await queryInterface.dropTable("Jobs", { transaction });
       await transaction.commit();
     } catch (err) {
       await transaction.rollback();
