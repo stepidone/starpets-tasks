@@ -4,8 +4,8 @@
   "description": "",
   "scripts": {
     "db:migrate": "sequelize-cli db:migrate",
-    "start": "node ./application.js",
-    "start:dev": "nodemon ./application.js"
+    "start": "node ./src/application.js",
+    "start:dev": "nodemon ./src/application.js"
   },
   "keywords": [],
   "author": "",

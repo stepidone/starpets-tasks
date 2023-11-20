@@ -1,14 +1,13 @@
 'use strict';
 
+const { UserModel } = require('../../src/database/user.entity');
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction()
     try {
-      await queryInterface.createTable('Users', {
-        id: { type: Sequelize.UUID, primaryKey: true, defaultValue: Sequelize.literal('gen_random_uuid()') },
-        balance: { type: Sequelize.INTEGER, allowNull: false, defaultValue: 0 },
-      }, { transaction })
+      await UserModel.sync({ transaction })
       
       await queryInterface.addConstraint('Users', {
         name: 'users_check_is_balance_positive',
