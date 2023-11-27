@@ -1,116 +1,65 @@
 "use strict";
 
+const { ConnectionModel } = require('../../src/database/connection.entity');
+const { JobModel } = require('../../src/database/job.entity');
+const { LogModel } = require('../../src/database/log.entity');
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
     try {
-      await queryInterface.createTable(
-        "Jobs",
-        {
-          name: {
-            type: Sequelize.STRING,
-            primaryKey: true,
-          },
-          cron: {
-            type: Sequelize.STRING,
-            allowNull: false,
-          },
-          onUseBy: {
-            type: Sequelize.INTEGER,
-            allowNull: true,
-          },
-        },
-        { transaction },
-      );
-      await queryInterface.createTable(
-        "JobLogs",
-        {
-          id: {
-            type: Sequelize.INTEGER,
-            autoIncrement: true,
-            primaryKey: true,
-          },
-          jobName: {
-            type: Sequelize.STRING,
-            allowNull: false,
-          },
-          runnedAt: {
-            type: Sequelize.DATE,
-            defaultValue: Sequelize.literal("now()"),
-            allowNull: false,
-          },
-          completedAt: {
-            type: Sequelize.DATE,
-            allowNull: true,
-          },
-          runnedBy: {
-            type: Sequelize.INTEGER,
-            allowNull: false,
-          },
-        },
-        { transaction },
-      );
-      await queryInterface.addConstraint("JobLogs", {
-        type: "foreign key",
-        fields: ["jobName"],
-        references: {
-          table: "Jobs",
-          field: "name",
-        },
-        name: "JobLogs_jobName_fkey",
-        onDelete: "cascade",
-        onUpdate: "cascade",
-        transaction,
-      });
+      await ConnectionModel.sync({ transaction })
+      await JobModel.sync({ transaction })
+      await LogModel.sync({ transaction })
 
       const mockJobs = [
         {
+          name: "every_ten_seconds",
+          msInterval: 1000 * 10,
+        },
+        {
+          name: "every_thirty_seconds",
+          msInterval: 1000 * 30,
+        },
+        {
           name: "every_minute",
-          cron: "* * * * *",
+          msInterval: 1000 * 60,
         },
         {
           name: "every_two_minutes",
-          cron: "*/2 * * * *",
+          msInterval: 1000 * 60 * 2,
         },
         {
           name: "every_ten_minutes",
-          cron: "*/10 * * * *",
+          msInterval: 1000 * 60 * 10,
         },
         {
           name: "every_thirty_minutes",
-          cron: "*/30 * * * *",
+          msInterval: 1000 * 60 * 30,
         },
         {
           name: "every_hour",
-          cron: "0 * * * *",
+          msInterval: 1000 * 60 * 60,
         },
         {
           name: "every_five_hours",
-          cron: "0 */5 * * *",
+          msInterval: 1000 * 60 * 60 * 5,
         },
         {
           name: "every_day",
-          cron: "0 1 * * *",
+          msInterval: 1000 * 60 * 60 * 24,
         },
         {
           name: "every_week",
-          cron: "0 0 * * 0",
-        },
-        {
-          name: "every_month",
-          cron: "0 0 1 * *",
-        },
-        {
-          name: "every_year",
-          cron: "0 0 1 1 *",
+          msInterval: 1000 * 60 * 60 * 24 * 7,
         },
       ];
 
       const query = mockJobs.reduce((q, data, i) => {
         if (i) q += ", ";
-        return (q += `('${data.name}', '${data.cron}')`);
-      }, 'insert into "Jobs" ("name", "cron") values ');
+        return (q += `('${data.name}', ${data.msInterval})`);
+      }, 'insert into "Jobs" ("name", "msInterval") values ');
 
       await queryInterface.sequelize.query(query, { transaction });
 
@@ -124,8 +73,9 @@ module.exports = {
   async down(queryInterface) {
     const transaction = await queryInterface.sequelize.transaction();
     try {
-      await queryInterface.dropTable("JobLogs", { transaction });
+      await queryInterface.dropTable("Logs", { transaction });
       await queryInterface.dropTable("Jobs", { transaction });
+      await queryInterface.dropTable("Connections", { transaction });
       await transaction.commit();
     } catch (err) {
       await transaction.rollback();

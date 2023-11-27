@@ -15,5 +15,4 @@
 # How to use
 
 1. Migrate db using ```npm run db:migrate```
-2. Build applcation ```npm run build```
-3. Launch server using ```npm run start```
+2. Launch application using ```npm run start```
